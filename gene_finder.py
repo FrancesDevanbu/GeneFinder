@@ -2,7 +2,7 @@
 """
 YOUR HEADER COMMENT HERE
 
-@author: YOUR NAME HERE
+@author: Frances Devanbu
 
 """
 
@@ -30,8 +30,18 @@ def get_complement(nucleotide):
     >>> get_complement('C')
     'G'
     """
-    # TODO: implement this
-    pass
+    if nucleotide == 'A' :
+        return 'T'
+    elif nucleotide == 'T' :
+        return 'A'
+    elif nucleotide == 'G' :
+        return 'C'
+    elif nucleotide == 'C' :
+        return 'G'
+
+    # TODO: implemenif nucleotide = 'A' :
+        pass
+
 
 
 def get_reverse_complement(dna):
@@ -45,6 +55,13 @@ def get_reverse_complement(dna):
     >>> get_reverse_complement("CCGCGTTCA")
     'TGAACGCGG'
     """
+    Complement = ''
+    x = len(dna)-1 # finds last place in string
+    while x >= 0: # goe from last letter to first letter
+        Complement = Complement + get_complement(dna[x]) #adds inverse codon in reverse order
+        x = x-1 # moves to the next letter (in reverse)
+    return Complement
+
     # TODO: implement this
     pass
 
@@ -62,6 +79,18 @@ def rest_of_ORF(dna):
     >>> rest_of_ORF("ATGAGATAGG")
     'ATGAGA'
     """
+
+    stopcodons= ['TAG','TGA','TAA'] # the stop codons
+    PC = (len(dna)/3)-1 # gives set that reps position of eact codon
+    codons = [dna [i:i+3] for i in range(0, len(dna), 3)] # splits into codons
+    x = 0
+    string =''
+    while x <= PC:
+        codon = codons[x]
+        if codon in stopcodons: #if dna has a stop codon
+            return string # return before adding that codon
+        string = string + codon # add this codon to the string
+        x =x+1
     # TODO: implement this
     pass
 
@@ -79,7 +108,20 @@ def find_all_ORFs_oneframe(dna):
     >>> find_all_ORFs_oneframe("ATGCATGAATGTAGATAGATGTGCCC")
     ['ATGCATGAATGTAGA', 'ATGTGCCC']
     """
+
+    codons = [dna [i:i+3] for i in range(0, len(dna), 3)] # splits into codons
+    startcodon = ['ATG']
+    PC = (len(dna)/3)-1 # gives set that reps position of eact codon
+    x= 0
+    result = []
+    while x <= PC:
+        if startcodon == codons[x]:
+            result.append(rest_of_ORF(dna[(x+1)*3-1]))
+            x = x + (len(rest_of_ORF(dna[(x+1)*3-1]))/3)
+        else:
+            x = x+1
     # TODO: implement this
+    return result
     pass
 
 
