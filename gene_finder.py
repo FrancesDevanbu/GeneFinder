@@ -78,6 +78,8 @@ def rest_of_ORF(dna):
     'ATG'
     >>> rest_of_ORF("ATGAGATAGG")
     'ATGAGA'
+    >>> rest_of_ORF("ATGAGAGAGG") # does it keep the leftovers :)
+    'ATGAGAGAGG'
     """
 
     stopcodons= ['TAG','TGA','TAA'] # the stop codons
@@ -91,6 +93,11 @@ def rest_of_ORF(dna):
             return string # return before adding that codon
         string = string + codon # add this codon to the string
         x =x+1
+    #leftovers= dna[-(len(dna)%3):]
+    #print("leftovers: ", leftovers)
+    #print("string + leftovers: ", string + leftovers)
+    return dna
+
     # TODO: implement this
     pass
 
@@ -110,19 +117,19 @@ def find_all_ORFs_oneframe(dna):
     """
 
     codons = [dna [i:i+3] for i in range(0, len(dna), 3)] # splits into codons
-    startcodon = ['ATG']
-    PC = (len(dna)/3)-1 # gives set that reps position of eact codon
+    startcodon = 'ATG'
+    PC = (len(dna)//3)-1 # gives set that reps position of eact codon
     x= 0
     result = []
     while x <= PC:
         if startcodon == codons[x]:
-            result.append(rest_of_ORF(dna[(x+1)*3-1]))
-            x = x + (len(rest_of_ORF(dna[(x+1)*3-1]))/3)
+
+            result.append(rest_of_ORF(dna[(x)*3:]))
+            #print("Appending: ", rest_of_ORF(dna[(x)*3:]))
+            x = x + (len(rest_of_ORF(dna[(x)*3:]))//3)
         else:
             x = x+1
-    # TODO: implement this
     return result
-    pass
 
 
 def find_all_ORFs(dna):
@@ -138,6 +145,16 @@ def find_all_ORFs(dna):
     >>> find_all_ORFs("ATGCATGAATGTAG")
     ['ATGCATGAATGTAG', 'ATGAATGTAG', 'ATG']
     """
+    dna1 = dna[1:]
+    dna2 = dna[2:]
+    Frame = find_all_ORFs_oneframe(dna)
+    #print("find all orfs Frame: ", Frame)
+    Frame1 = find_all_ORFs_oneframe(dna1)
+    #print("find all orfs Frame1: ", Frame1)
+    Frame2 = find_all_ORFs_oneframe(dna2)
+    return Frame + Frame1 + Frame2
+
+
     # TODO: implement this
     pass
 
@@ -151,6 +168,15 @@ def find_all_ORFs_both_strands(dna):
     >>> find_all_ORFs_both_strands("ATGCGAATGTAGCATCAAA")
     ['ATGCGAATG', 'ATGCTACATTCGCAT']
     """
+    strand1 = dna
+    #print("strand1: ", strand1)
+    strand2 = get_reverse_complement(dna)
+    #print("strand2: ", strand2)
+    Frames1 = find_all_ORFs(strand1)
+    #print("Frames1: ", Frames1)
+    Frames2 = find_all_ORFs(strand2)
+    #print("Frames2: ", Frames2)
+    return Frames1 + Frames2
     # TODO: implement this
     pass
 
@@ -161,7 +187,11 @@ def longest_ORF(dna):
     >>> longest_ORF("ATGCGAATGTAGCATCAAA")
     'ATGCTACATTCGCAT'
     """
+    #chooses longest ORF
+    return max(find_all_ORFs_both_strands(dna), key=len)
+
     # TODO: implement this
+
     pass
 
 
@@ -172,8 +202,14 @@ def longest_ORF_noncoding(dna, num_trials):
         dna: a DNA sequence
         num_trials: the number of random shuffles
         returns: the maximum length longest ORF """
-    # TODO: implement this
-    pass
+
+    orfshuffled = []
+    x = 0
+    while  x <= num_trials:
+        #making a set of all the longest orfs from each suffle
+        orfshuffled =  orfshuffled + [longest_ORF(shuffle_string(dna))]
+        x = x + 1
+    return len(max(orfshuffled, key=len))
 
 
 def coding_strand_to_AA(dna):
@@ -190,8 +226,15 @@ def coding_strand_to_AA(dna):
         >>> coding_strand_to_AA("ATGCCCGCTTT")
         'MPA'
     """
-    # TODO: implement this
-    pass
+    codons = [dna [i:i+3] for i in range(0, len(dna), 3)] # splits into codons
+    x = 0 # index of condons
+    amino_acids = ""
+    while x < len(dna)//3:
+        amino_acid = aa_table[codons[x]]
+        amino_acids = amino_acids + amino_acid
+        x = x + 1
+    return amino_acids
+
 
 
 def gene_finder(dna):
@@ -200,9 +243,22 @@ def gene_finder(dna):
         dna: a DNA sequence
         returns: a list of all amino acid sequences coded by the sequence dna.
     """
-    # TODO: implement this
-    pass
+    threshold = longest_ORF_noncoding(dna, 100)
+    all_ORFs = find_all_ORFs_both_strands(dna)
+    big_aminos = []
+    for string in all_ORFs:
+        if len(string) > threshold:
+            big_aminos = big_aminos + [coding_strand_to_AA(string)]
+
+    return big_aminos
+
+from load import load_seq
+dna = load_seq("./data/X73525.fa")
+
+
 
 if __name__ == "__main__":
+    print (gene_finder(dna) )
+
     import doctest
     doctest.testmod()
